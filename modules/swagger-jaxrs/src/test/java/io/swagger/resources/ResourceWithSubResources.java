@@ -14,7 +14,7 @@ public class ResourceWithSubResources {
             response = Employee.class,
             responseContainer = "list",
             tags = "Employees")
-    @Path("{id}")
+    @GET
     public SubResource getTest() {
         return new SubResource();
     }

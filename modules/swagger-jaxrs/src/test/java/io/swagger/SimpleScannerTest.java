@@ -46,12 +46,10 @@ import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.fail;
 
-public class SimpleReaderTest {
+public class SimpleScannerTest {
 
     private Swagger getSwagger(Class<?> cls) {
-        DefaultReaderConfig config = new DefaultReaderConfig();
-        config.setScanAllResources(true);
-        return new Reader(new Swagger(), config).read(cls);
+        return new Reader(new Swagger()).read(cls);
     }
 
     private Map<String, Response> getGetResponses(Swagger swagger, String path) {
