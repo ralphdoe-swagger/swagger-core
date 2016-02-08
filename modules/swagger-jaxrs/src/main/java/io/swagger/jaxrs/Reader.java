@@ -61,14 +61,6 @@ import io.swagger.util.BaseReaderUtils;
 import io.swagger.util.ParameterProcessor;
 import io.swagger.util.PathUtils;
 import io.swagger.util.ReflectionUtils;
-
-import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.ws.rs.Consumes;
-import javax.ws.rs.HttpMethod;
-import javax.ws.rs.Produces;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
@@ -84,6 +76,12 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.HttpMethod;
+import javax.ws.rs.Produces;
+import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class Reader {
     private static final Logger LOGGER = LoggerFactory.getLogger(Reader.class);
@@ -793,7 +791,7 @@ public class Reader {
 
         operation.operationId(operationId);
 
-        if (apiOperation != null && apiOperation.consumes() != null && apiOperation.consumes().isEmpty()) {
+        if (apiOperation == null || apiOperation.consumes() == null || apiOperation.consumes().isEmpty()) {
             final Consumes consumes = ReflectionUtils.getAnnotation(method, Consumes.class);
             if (consumes != null) {
                 for (String mediaType : ReaderUtils.splitContentValues(consumes.value())) {
@@ -802,7 +800,7 @@ public class Reader {
             }
         }
 
-        if (apiOperation != null && apiOperation.produces() != null && apiOperation.produces().isEmpty()) {
+        if (apiOperation == null || apiOperation.produces() == null || apiOperation.produces().isEmpty()) {
             final Produces produces = ReflectionUtils.getAnnotation(method, Produces.class);
             if (produces != null) {
                 for (String mediaType : ReaderUtils.splitContentValues(produces.value())) {
