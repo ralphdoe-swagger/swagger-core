@@ -1,6 +1,14 @@
 package io.swagger;
 
 import com.subresourcesTest.RootResource;
+import io.swagger.integration.GenericSwaggerContext;
+import io.swagger.integration.GenericSwaggerProcessor;
+import io.swagger.integration.SwaggerConfiguration;
+import io.swagger.integration.SwaggerContext;
+import io.swagger.integration.SwaggerProcessor;
+import io.swagger.jaxrs.Reader;
+import io.swagger.jaxrs.integration.XmlWebSwaggerContext;
+import io.swagger.jaxrs.integration.AnnotationJaxrsScanner;
 import io.swagger.jaxrs.config.BeanConfig;
 import io.swagger.models.Scheme;
 import io.swagger.models.Swagger;
@@ -41,6 +49,30 @@ public class BeanConfigTest {
         assertNotNull(swagger);
         assertEquals(swagger.getPaths().keySet(), expectedKeys);
         assertEquals(swagger.getSchemes(), expectedSchemas);
+    }
+
+    @Test(description = "scan a simple resource")
+    public void shouldScanWithNewInitialization() {
+        SwaggerConfiguration config = new SwaggerConfiguration()
+                .withResourcePackage("com.my.project.resources,org.my.project.resources")
+                .withSchemes(new String[]{"http", "https"});
+        SwaggerProcessor p = new GenericSwaggerProcessor()
+                .withSwaggerConfiguration(config);
+
+        p.setSwaggerReader(new Reader(config.toSwagger(null)));
+        p.setSwaggerScanner(new AnnotationJaxrsScanner().withSwaggerConfiguration(config));
+        SwaggerContext ctx = new GenericSwaggerContext().addSwaggerProcessor(p).init();
+        Swagger swagger = ctx.getSwaggerProcessors().get("/").read();
+
+        assertNotNull(swagger);
+        assertEquals(swagger.getPaths().keySet(), expectedKeys);
+
+        ctx = new XmlWebSwaggerContext().withSwaggerConfiguration(config).init();
+        swagger = ctx.read();
+
+        assertNotNull(swagger);
+        assertEquals(swagger.getPaths().keySet(), expectedKeys);
+        //assertEquals(swagger.getSchemes(), expectedSchemas);
     }
 
     @Test(description = "deep scan packages per #1011")

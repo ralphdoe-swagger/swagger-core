@@ -6,7 +6,11 @@ import io.swagger.config.Scanner;
 import io.swagger.config.SwaggerConfig;
 import io.swagger.core.filter.SpecFilter;
 import io.swagger.core.filter.SwaggerSpecFilter;
+import io.swagger.integration.SwaggerContext;
+import io.swagger.integration.SwaggerContextLocator;
+import io.swagger.integration.SwaggerProcessor;
 import io.swagger.jaxrs.Reader;
+import io.swagger.jaxrs.integration.XmlWebSwaggerContext;
 import io.swagger.jaxrs.config.JaxrsScanner;
 import io.swagger.jaxrs.config.ReaderConfigUtils;
 import io.swagger.jaxrs.config.SwaggerContextService;
@@ -138,7 +142,76 @@ public class ApiListingResource {
         if (StringUtils.isNotBlank(type) && type.trim().equalsIgnoreCase("yaml")) {
             return getListingYaml(app, sc, headers, uriInfo);
         } else {
-            return getListingJson(app, sc, headers, uriInfo);
+            return getListingJson2(app, sc, headers, uriInfo);
+        }
+    }
+
+
+    private SwaggerContext getOrBuildContext(String ctxId, Application app, ServletConfig sc) {
+        SwaggerContext ctx = SwaggerContextLocator.getInstance().getSwaggerContext(ctxId);
+        String rootId = SwaggerContext.SWAGGER_CONTEXT_ID_DEFAULT;
+        if (ctx == null) {
+            // get root
+            ctx = SwaggerContextLocator.getInstance().getSwaggerContext(rootId);
+            if (ctx == null) {
+                ctx = new XmlWebSwaggerContext()
+                        .withServletConfig(sc)
+                        .withApp(app)
+                        .withId(ctxId)
+                        .init();
+            } else {
+                SwaggerContextLocator.getInstance().putSwaggerContext(ctxId, ctx);
+            }
+        }
+        return ctx;
+    }
+
+
+    @GET
+    @Produces({MediaType.APPLICATION_JSON})
+    @Path("/api-docs/swaggers")
+    @ApiOperation(value = "The swagger definition in JSON", hidden = true)
+    public Response getListingJsonBase(
+            @Context Application app,
+            @Context ServletConfig sc) {
+        return getListingJson(app, sc, "/");
+
+    }
+
+    @GET
+    @Produces({MediaType.APPLICATION_JSON})
+    @Path("/api-docs/{basePath}/swaggers")
+    @ApiOperation(value = "The swagger definition in JSON", hidden = true)
+    public Response getListingJson(
+            @Context Application app,
+            @Context ServletConfig sc,
+            @PathParam("basePath") String basePath) {
+        // get context for this servlet e.g. for part of path:
+        String ctxId;
+        final String rootCtxId = SwaggerContext.SWAGGER_CONTEXT_ID_DEFAULT;
+        SwaggerContext ctx;
+        if (sc != null) {
+            ctxId =SwaggerContext.SWAGGER_CONTEXT_ID_PREFIX + "servlet." + sc.getServletName();
+            ctx = getOrBuildContext(ctxId, app, sc);
+        } else {
+            ctx = getOrBuildContext(rootCtxId, app, sc);
+        }
+        String processorKey = "/";
+        if (!basePath.startsWith("/")) basePath = "/" + basePath;
+        processorKey = basePath;
+
+        SwaggerProcessor p = ctx.getSwaggerProcessors().get(processorKey);
+        if (p == null) {
+            // default to root processor
+            // TODO DO WE WANT THIS OR WE THROW ERROR
+            //p = ctx.getSwaggerProcessors().get("/");
+        }
+        Swagger swagger = p.read();
+
+        if (swagger != null) {
+            return Response.ok().entity(swagger).build();
+        } else {
+            return Response.status(404).build();
         }
     }
 
@@ -146,7 +219,7 @@ public class ApiListingResource {
     @Produces({MediaType.APPLICATION_JSON})
     @Path("/swagger")
     @ApiOperation(value = "The swagger definition in JSON", hidden = true)
-    public Response getListingJson(
+    public Response getListingJson2(
             @Context Application app,
             @Context ServletConfig sc,
             @Context HttpHeaders headers,

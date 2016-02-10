@@ -30,6 +30,7 @@ import io.swagger.annotations.Info;
 import io.swagger.annotations.ResponseHeader;
 import io.swagger.annotations.SwaggerDefinition;
 import io.swagger.converter.ModelConverters;
+import io.swagger.integration.SwaggerReader;
 import io.swagger.jaxrs.config.DefaultReaderConfig;
 import io.swagger.jaxrs.config.ReaderConfig;
 import io.swagger.jaxrs.config.ReaderListener;
@@ -83,7 +84,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class Reader {
+public class Reader implements SwaggerReader{
     private static final Logger LOGGER = LoggerFactory.getLogger(Reader.class);
     private static final String SUCCESSFUL_OPERATION = "successful operation";
     private static final String PATH_DELIMITER = "/";
@@ -100,6 +101,22 @@ public class Reader {
         this.config = new DefaultReaderConfig(config);
     }
 
+
+    // TODO see which pattern to use.
+    private Set<Class<?>> classes;
+
+    public Reader withClasses(Set<Class<?>> classes) {
+        this.classes = classes;
+        return this;
+    }
+
+    // TODO
+    @Override
+    public Swagger read(Set<Class<?>> classes, Map<String, Object> resources) {
+        LOGGER.error("AAA read!! " + classes);
+        return read(classes);
+    }
+
     /**
      * Scans a set of classes for both ReaderListeners and Swagger annotations. All found listeners will
      * be instantiated before any of the classes are scanned for Swagger annotations - so they can be invoked
@@ -108,7 +125,6 @@ public class Reader {
      * @param classes a set of classes to scan
      * @return the generated Swagger definition
      */
-
     public Swagger read(Set<Class<?>> classes) {
 
         Map<Class<?>, ReaderListener> listeners = new HashMap<Class<?>, ReaderListener>();
