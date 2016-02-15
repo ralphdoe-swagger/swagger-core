@@ -15,6 +15,23 @@ public class GenericSwaggerContext<T extends GenericSwaggerContext> implements S
 
     private String resourcePackage;
 
+    private String basePath = "/";
+
+    public String getBasePath() {
+        return basePath;
+    }
+
+    public void setBasePath(String basePath) {
+        this.basePath = basePath;
+    }
+
+
+    public final T withBasePath(String basePath) {
+        this.basePath = basePath;
+        return (T) this;
+    }
+
+
     public T withSwaggerConfiguration(SwaggerConfiguration swaggerConfiguration) {
         this.swaggerConfiguration = swaggerConfiguration;
         return (T) this;
@@ -72,6 +89,9 @@ public class GenericSwaggerContext<T extends GenericSwaggerContext> implements S
     }
 
     public GenericSwaggerContext addSwaggerProcessor(SwaggerProcessor swaggerProcessor) {
+        if (StringUtils.isEmpty(swaggerProcessor.getBasePath())) {
+            swaggerProcessor.getSwaggerConfiguration().getSwagger().basePath(basePath);
+        }
         swaggerProcessors.put(swaggerProcessor.getBasePath(), swaggerProcessor);
         return this;
     }
@@ -99,7 +119,7 @@ public class GenericSwaggerContext<T extends GenericSwaggerContext> implements S
             reader = new SwaggerReader() {
                 @Override
                 public Swagger read(Set<Class<?>> classes, Map<String, Object> resources) {
-                    Swagger swagger = swaggerConfiguration.toSwagger(null);
+                    Swagger swagger = swaggerConfiguration.getSwagger();
                     return swagger;
 
                 }
@@ -136,7 +156,7 @@ public class GenericSwaggerContext<T extends GenericSwaggerContext> implements S
     public SwaggerContext init() {
         if (StringUtils.isNotEmpty(configLocation)) {
             // TODO handle urls and stuff, also use loadConfiguration protected
-            Map<String, SwaggerConfiguration> configurations = SwaggerConfiguration.fromUrl(buildConfigLocationURL(configLocation), null);
+            Map<String, SwaggerConfiguration> configurations = SwaggerConfiguration.fromUrl(buildConfigLocationURL(configLocation), null, basePath);
             for (String path : configurations.keySet()) {
                 try {
                     swaggerProcessors.put(path, buildProcessor(path, configurations.get(path)));
@@ -152,8 +172,9 @@ public class GenericSwaggerContext<T extends GenericSwaggerContext> implements S
             try {
                 if (swaggerConfiguration == null) {
                     swaggerConfiguration = new SwaggerConfiguration().withResourcePackage(resourcePackage);
+                    swaggerConfiguration.getSwagger().basePath(basePath);
                 }
-                swaggerProcessors.put("/", buildProcessor("/", swaggerConfiguration));
+                swaggerProcessors.put(basePath, buildProcessor(basePath, swaggerConfiguration));
             } catch (Exception e) {
                 // TODO
                 e.printStackTrace();
@@ -171,14 +192,7 @@ public class GenericSwaggerContext<T extends GenericSwaggerContext> implements S
         if (swaggerProcessors.isEmpty()) {
             return null;
         }
-        SwaggerProcessor lastProcessor = null;
-        for (SwaggerProcessor p : swaggerProcessors.values()) {
-            lastProcessor = p;
-            if (p.getBasePath().equalsIgnoreCase("/")) {
-                return p.read();
-            }
-        }
-        return lastProcessor.read();
+        return swaggerProcessors.get(basePath).read();
     }
 
     @Override
@@ -187,10 +201,8 @@ public class GenericSwaggerContext<T extends GenericSwaggerContext> implements S
             return swaggerConfiguration;
         }
         if (!swaggerProcessors.isEmpty()) {
-            if (swaggerProcessors.get("/") != null) {
-                return swaggerProcessors.get("/").getSwaggerConfiguration();
-            } else {
-                return swaggerProcessors.values().iterator().next().getSwaggerConfiguration();
+            if (swaggerProcessors.get(basePath) != null) {
+                return swaggerProcessors.get(basePath).getSwaggerConfiguration();
             }
         }
         return null;

@@ -113,7 +113,6 @@ public class Reader implements SwaggerReader{
     // TODO
     @Override
     public Swagger read(Set<Class<?>> classes, Map<String, Object> resources) {
-        LOGGER.error("AAA read!! " + classes);
         return read(classes);
     }
 

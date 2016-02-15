@@ -12,6 +12,7 @@ public class XmlWebSwaggerContext<T extends XmlWebSwaggerContext<T>> extends Jax
     private ServletConfig servletConfig;
 
     public static final String SWAGGER_CONFIGURATION_RESOURCEPACKAGE_KEY = "swagger.configuration.resourcePackage";
+    public static final String SWAGGER_CONFIGURATION_BASEPATH_KEY = "swagger.configuration.basePath";
     public static final String SWAGGER_CONFIGURATION_LOCATION_KEY = "swagger.configuration.location";
     public static final String JERSEY1_PACKAGE_KEY = "com.sun.jersey.config.property.packages";
     public static final String JERSEY2_PACKAGE_KEY = "jersey.config.server.provider.packages";
@@ -30,6 +31,7 @@ public class XmlWebSwaggerContext<T extends XmlWebSwaggerContext<T>> extends Jax
 
     public T withServletConfig(ServletConfig servletConfig) {
 
+        if (servletConfig == null) return (T)this;
         this.servletConfig = servletConfig;
         this.servletContext = servletConfig.getServletContext();
         withId(SWAGGER_CONTEXT_ID_PREFIX + "servlet." + servletConfig.getServletName());
@@ -38,7 +40,10 @@ public class XmlWebSwaggerContext<T extends XmlWebSwaggerContext<T>> extends Jax
             withConfigLocation(location);
         }
         resolveResourcePackage(servletConfig);
-
+        String basePath = getInitParam (servletConfig, SWAGGER_CONFIGURATION_BASEPATH_KEY);
+        if (basePath != null) {
+            withBasePath(basePath);
+        }
         return (T)this;
     }
 
@@ -47,6 +52,7 @@ public class XmlWebSwaggerContext<T extends XmlWebSwaggerContext<T>> extends Jax
         if (resourcePackage == null) {
             // jersey 1
             resourcePackage = getInitParam (servletConfig, JERSEY1_PACKAGE_KEY);
+            resourcePackage = resourcePackage.replace(';', ',');
         }
         if (resourcePackage == null) {
             // jersey 2

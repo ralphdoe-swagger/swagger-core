@@ -19,4 +19,6 @@ public interface SwaggerContext {
     Swagger read();
 
     SwaggerConfiguration getSwaggerConfiguration();
+
+    String getConfigLocation();
 }

@@ -1,9 +1,11 @@
 package io.swagger.integration;
 
 import com.fasterxml.jackson.core.type.TypeReference;
-import io.swagger.models.Info;
 import io.swagger.models.Swagger;
 import io.swagger.util.Json;
+import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -20,29 +22,21 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class SwaggerConfiguration {
 
+    private static Logger LOGGER = LoggerFactory.getLogger(SwaggerConfiguration.class);
+
+    private Swagger swagger = new Swagger();
+
     Map<String, String> rawProperties = new ConcurrentHashMap<String, String>();
     private boolean basePathAsKey;
 
     private String resourcePackage;
-    private String[] schemes;
-    private String title;
-    private String version;
-    private String description;
-    private String termsOfServiceUrl;
-    private String contact;
-    private String license;
-    private String licenseUrl;
     private String filterClass;
-    private Info info;
-    private String host;
-    private String basePath = "/";
-
     private String readerClass;
     private String scannerClass;
     private String processorClass;
     private boolean pathAsProcessorKey;
 
-    public static Map<String, SwaggerConfiguration> fromUrl(URL location, String format) {
+    public static Map<String, SwaggerConfiguration> fromUrl(URL location, String format, String basePath) {
 
         // get file as string (for the moment, TODO use commons config)
         // load from classpath etc, look from file..
@@ -50,11 +44,17 @@ public class SwaggerConfiguration {
             Map<String, SwaggerConfiguration> configurationMap = new HashMap<String, SwaggerConfiguration>();
 
             String configAsString = readUrl(location);
-
             List<SwaggerConfiguration> configurations = Json.mapper().readValue(configAsString, new TypeReference<List<SwaggerConfiguration>>() {
             });
             for (SwaggerConfiguration config : configurations) {
-                configurationMap.put(config.basePath, config);
+                if (StringUtils.isEmpty(config.swagger.getBasePath())){
+                    if (StringUtils.isEmpty(basePath)) {
+                        config.swagger.basePath("/");
+                    } else {
+                        config.swagger.basePath(basePath);
+                    }
+                }
+                configurationMap.put(config.swagger.getBasePath(), config);
             }
             return configurationMap;
 
@@ -87,6 +87,17 @@ public class SwaggerConfiguration {
         return sb.toString();
     }
 
+    public Swagger getSwagger() {
+        return swagger;
+    }
+    public void setSwagger (Swagger swagger) {
+        this.swagger = swagger;
+    }
+    public SwaggerConfiguration swagger (Swagger swagger) {
+        this.swagger = swagger;
+        return this;
+    }
+
     public boolean isPathAsProcessorKey() {
         return pathAsProcessorKey;
     }
@@ -95,7 +106,7 @@ public class SwaggerConfiguration {
         this.pathAsProcessorKey = pathAsProcessorKey;
     }
 
-    public SwaggerConfiguration withtPathAsProcessorKey(boolean pathAsProcessorKey) {
+    public SwaggerConfiguration withPathAsProcessorKey(boolean pathAsProcessorKey) {
         this.pathAsProcessorKey = pathAsProcessorKey;
         return this;
     }
@@ -155,16 +166,6 @@ public class SwaggerConfiguration {
         return this;
     }
 
-    public Swagger toSwagger(Swagger swagger) {
-        // TODO
-        if (swagger == null) {
-            swagger = new Swagger();
-        }
-        swagger.setBasePath(basePath);
-        //swagger.setInfo(...);
-        return swagger;
-    }
-
     // TODO ENUM ETC
     private void loadRawProperties() {
         for (String key : rawProperties.keySet()) {
@@ -205,109 +206,6 @@ public class SwaggerConfiguration {
         return this;
     }
 
-    public String[] getSchemes() {
-        return schemes;
-    }
-
-    public void setSchemes(String[] schemes) {
-        this.schemes = schemes;
-    }
-
-    public SwaggerConfiguration withSchemes(String[] schemes) {
-        this.schemes = schemes;
-        return this;
-    }
-
-    public String getTitle() {
-        return title;
-    }
-
-    public void setTitle(String title) {
-        this.title = title;
-    }
-
-    public SwaggerConfiguration withTitle(String title) {
-        this.title = title;
-        return this;
-    }
-
-    public String getVersion() {
-        return version;
-    }
-
-    public void setVersion(String version) {
-        this.version = version;
-    }
-
-    public SwaggerConfiguration withVersion(String version) {
-        this.version = version;
-        return this;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
-    }
-
-    public SwaggerConfiguration withDescription(String description) {
-        this.description = description;
-        return this;
-    }
-
-    public String getTermsOfServiceUrl() {
-        return termsOfServiceUrl;
-    }
-
-    public void setTermsOfServiceUrl(String termsOfServiceUrl) {
-        this.termsOfServiceUrl = termsOfServiceUrl;
-    }
-
-    public SwaggerConfiguration withTermsOfServiceUrl(String termsOfServiceUrl) {
-        this.termsOfServiceUrl = termsOfServiceUrl;
-        return this;
-    }
-
-    public String getContact() {
-        return contact;
-    }
-
-    public void setContact(String contact) {
-        this.contact = contact;
-    }
-
-    public SwaggerConfiguration withContact(String contact) {
-        this.contact = contact;
-        return this;
-    }
-
-    public String getLicense() {
-        return license;
-    }
-
-    public void setLicense(String license) {
-        this.license = license;
-    }
-
-    public SwaggerConfiguration withLicense(String license) {
-        this.license = license;
-        return this;
-    }
-
-    public String getLicenseUrl() {
-        return licenseUrl;
-    }
-
-    public void setLicenseUrl(String licenseUrl) {
-        this.licenseUrl = licenseUrl;
-    }
-
-    public SwaggerConfiguration withLicenseUrl(String licenseUrl) {
-        this.licenseUrl = licenseUrl;
-        return this;
-    }
 
     public String getFilterClass() {
         return filterClass;
@@ -322,44 +220,6 @@ public class SwaggerConfiguration {
         return this;
     }
 
-    public Info getInfo() {
-        return info;
-    }
-
-    public void setInfo(Info info) {
-        this.info = info;
-    }
-
-    public SwaggerConfiguration withInfo(Info info) {
-        this.info = info;
-        return this;
-    }
-
-    public String getHost() {
-        return host;
-    }
-
-    public void setHost(String host) {
-        this.host = host;
-    }
-
-    public SwaggerConfiguration withHost(String host) {
-        this.host = host;
-        return this;
-    }
-
-    public String getBasePath() {
-        return basePath;
-    }
-
-    public void setBasePath(String basePath) {
-        this.basePath = basePath;
-    }
-
-    public SwaggerConfiguration withBasePath(String basePath) {
-        this.basePath = basePath;
-        return this;
-    }
 
     public SwaggerConfiguration withJavaProperties(Properties properties) {
         if (properties != null) {

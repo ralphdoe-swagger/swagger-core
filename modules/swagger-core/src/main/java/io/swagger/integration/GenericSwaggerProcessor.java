@@ -1,6 +1,7 @@
 package io.swagger.integration;
 
 import io.swagger.models.Swagger;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.Map;
 import java.util.Set;
@@ -9,6 +10,7 @@ public class GenericSwaggerProcessor implements SwaggerProcessor {
 
     private SwaggerReader swaggerReader;
     private SwaggerScanner swaggerScanner;
+
 
     public SwaggerReader getSwaggerReader() {
         return swaggerReader;
@@ -35,14 +37,26 @@ public class GenericSwaggerProcessor implements SwaggerProcessor {
         this.swaggerConfiguration = swaggerConfiguration;
     }
 
-    private SwaggerConfiguration swaggerConfiguration;
+    private SwaggerConfiguration swaggerConfiguration = new SwaggerConfiguration();
 
     @Override
     public String getBasePath() {
         if (swaggerConfiguration !=  null) {
-            return swaggerConfiguration.getBasePath();
+            if (StringUtils.isNotEmpty(swaggerConfiguration.getSwagger().getBasePath())) {
+                return swaggerConfiguration.getSwagger().getBasePath();
+            }
         }
-        return "/";
+        return null;
+    }
+
+    public void setBasePath (String basePath) {
+        if (swaggerConfiguration !=  null) {
+            swaggerConfiguration.getSwagger().basePath(basePath);
+        }
+    }
+    public GenericSwaggerProcessor withBasePath (String basePath) {
+        setBasePath(basePath);
+        return this;
     }
 
     public final GenericSwaggerProcessor withSwaggerReader(SwaggerReader swaggerReader) {
@@ -78,8 +92,7 @@ public class GenericSwaggerProcessor implements SwaggerProcessor {
             swaggerReader = new SwaggerReader() {
                 @Override
                 public Swagger read(Set<Class<?>> classes, Map<String, Object> resources) {
-                    swaggerConfiguration.getBasePath();
-                    Swagger swagger = swaggerConfiguration.toSwagger(null);
+                    Swagger swagger = swaggerConfiguration.getSwagger();
                     return swagger;
 
                 }

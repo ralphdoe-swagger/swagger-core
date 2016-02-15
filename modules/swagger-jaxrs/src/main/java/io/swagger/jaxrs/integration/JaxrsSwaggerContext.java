@@ -25,7 +25,7 @@ public class JaxrsSwaggerContext<T extends JaxrsSwaggerContext> extends GenericS
     @Override
     protected SwaggerReader buildReader(String path, SwaggerConfiguration swaggerConfiguration) throws Exception {
         LOGGER.trace("buildReader");
-        return new Reader(swaggerConfiguration.toSwagger(null));
+        return new Reader(swaggerConfiguration.getSwagger());
     }
 
     @Override

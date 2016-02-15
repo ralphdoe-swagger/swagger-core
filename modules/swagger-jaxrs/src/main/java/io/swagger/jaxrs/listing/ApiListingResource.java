@@ -53,6 +53,48 @@ public class ApiListingResource {
     @Context
     ServletContext context;
 
+    private String configLocation;
+    
+    public String getConfigLocation() {
+        return configLocation;
+    }
+    public void setConfigLocation (String configLocation) {
+        this.configLocation = configLocation;
+    }
+
+    public ApiListingResource configLocation(String configLocation) {
+        setConfigLocation(configLocation);
+        return this;
+    }
+
+    private String basePath;
+
+    public String getBasePath() {
+        return basePath;
+    }
+    public void setBasePath (String basePath) {
+        this.basePath = basePath;
+    }
+
+    public ApiListingResource basePath(String basePath) {
+        setBasePath(basePath);
+        return this;
+    }
+
+    private String resourcePackage;
+
+    public String getResourcePackage() {
+        return resourcePackage;
+    }
+    public void setResourcePackage (String resourcePackage) {
+        this.resourcePackage = resourcePackage;
+    }
+
+    public ApiListingResource resourcePackage(String resourcePackage) {
+        setResourcePackage(resourcePackage);
+        return this;
+    }
+    
     protected synchronized Swagger scan(Application app, ServletConfig sc) {
         Swagger swagger = null;
         SwaggerContextService ctxService = new SwaggerContextService().withServletConfig(sc);
@@ -157,8 +199,17 @@ public class ApiListingResource {
                 ctx = new XmlWebSwaggerContext()
                         .withServletConfig(sc)
                         .withApp(app)
-                        .withId(ctxId)
-                        .init();
+                        .withId(ctxId);
+                if (ctx.getConfigLocation() == null && configLocation != null) {
+                    ((XmlWebSwaggerContext)ctx).withConfigLocation(configLocation);
+                }
+                if (basePath != null) {
+                    ((XmlWebSwaggerContext)ctx).withBasePath(basePath);
+                }
+                if (resourcePackage != null) {
+                    ((XmlWebSwaggerContext)ctx).withResourcePackage(resourcePackage);
+                }
+                ctx.init();
             } else {
                 SwaggerContextLocator.getInstance().putSwaggerContext(ctxId, ctx);
             }
@@ -199,7 +250,6 @@ public class ApiListingResource {
         String processorKey = "/";
         if (!basePath.startsWith("/")) basePath = "/" + basePath;
         processorKey = basePath;
-
         SwaggerProcessor p = ctx.getSwaggerProcessors().get(processorKey);
         if (p == null) {
             // default to root processor
@@ -207,7 +257,6 @@ public class ApiListingResource {
             //p = ctx.getSwaggerProcessors().get("/");
         }
         Swagger swagger = p.read();
-
         if (swagger != null) {
             return Response.ok().entity(swagger).build();
         } else {

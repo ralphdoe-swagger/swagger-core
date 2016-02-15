@@ -55,11 +55,11 @@ public class BeanConfigTest {
     public void shouldScanWithNewInitialization() {
         SwaggerConfiguration config = new SwaggerConfiguration()
                 .withResourcePackage("com.my.project.resources,org.my.project.resources")
-                .withSchemes(new String[]{"http", "https"});
-        SwaggerProcessor p = new GenericSwaggerProcessor()
-                .withSwaggerConfiguration(config);
+                .swagger(new Swagger().scheme(Scheme.forValue("http")).scheme(Scheme.forValue("https")));
+        SwaggerProcessor p = new GenericSwaggerProcessor().withSwaggerConfiguration(config);
 
-        p.setSwaggerReader(new Reader(config.toSwagger(null)));
+
+        p.setSwaggerReader(new Reader(config.getSwagger()));
         p.setSwaggerScanner(new AnnotationJaxrsScanner().withSwaggerConfiguration(config));
         SwaggerContext ctx = new GenericSwaggerContext().addSwaggerProcessor(p).init();
         Swagger swagger = ctx.getSwaggerProcessors().get("/").read();
