@@ -620,7 +620,7 @@ public class ModelResolver extends AbstractModelConverter implements ModelConver
 
     protected JavaType getInnerType(String innerType) {
         try {
-            Class<?> innerClass = Class.forName(innerType);
+            Class<?> innerClass = ReflectionUtils.loadClassByName(innerType);
             if (innerClass != null) {
                 TypeFactory tf = _mapper.getTypeFactory();
                 return tf.constructType(innerClass);
