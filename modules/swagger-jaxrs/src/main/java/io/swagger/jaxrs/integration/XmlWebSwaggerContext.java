@@ -70,7 +70,7 @@ public class XmlWebSwaggerContext<T extends XmlWebSwaggerContext<T>> extends Jax
     }
 
 
-    // TODO DRAFT and move logic
+    // TODO DRAFT and move logic to generic for what possible (classpath etc, known locations)
 /*
     protected SwaggerConfiguration loadConfiguration() {
 

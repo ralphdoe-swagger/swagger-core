@@ -155,7 +155,7 @@ public class GenericSwaggerContext<T extends GenericSwaggerContext> implements S
     @Override
     public SwaggerContext init() {
         if (StringUtils.isNotEmpty(configLocation)) {
-            // TODO handle urls and stuff, also use loadConfiguration protected
+            // TODO handle urls and stuff, also use loadConfiguration protected now in WebXmlContext..
             Map<String, SwaggerConfiguration> configurations = SwaggerConfiguration.fromUrl(buildConfigLocationURL(configLocation), null, basePath);
             for (String path : configurations.keySet()) {
                 try {
@@ -167,6 +167,8 @@ public class GenericSwaggerContext<T extends GenericSwaggerContext> implements S
 
             }
         }
+
+        // TODO here try with openApiController? and replace SwaggerConfiguration.fromUrl
 
         if (swaggerProcessors.isEmpty()) {
             try {
